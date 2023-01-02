@@ -1,11 +1,10 @@
 #!/system/bin/sh
-mkdir rootfs
-# Download proot-static and debian rootfs.
-# TODO: Add --clean switch incase user encounters corrupted download.
-if [ ! -f rootfs/.installed ];
+
+if [ ! -f rootfs/.installed ]; #Im sure this is a bad way of doing this, there must be a better way implementing this.
 then
+mkdir rootfs
 
-
+# Download proot-static and debian rootfs.                                  # TODO: Add --clean switch incase user encounters corrupted download.
 if [ ! -f $TMPDIR/proot.tar.gz ];
 then
 	curl -L https://github.com/ZhymabekRoman/proot-static/archive/refs/tags/1.0.tar.gz > $TMPDIR/proot.tar.gz
