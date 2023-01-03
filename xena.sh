@@ -27,11 +27,14 @@ proot-static-1.0/proot_static -0 -l -w / -r rootfs -b $TMPDIR/:/tmp /busybox tar
 # DNS fix
 echo "nameserver 8.8.8.8" > rootfs/etc/resolv.conf
 
+#
+echo "Message here" > rootfs/etc/motd
+
 # Create VNC server start script
 # TODO: Make connection only accesable to localhost
 # TODO: Add customizable resolution in config file
 cat > rootfs/bin/startvnc <<- EOM
-Xvnc -SecurityTypes none -listen tcp -ZlibLevel=0 -ImprovedHextile=0 -CompareFB=0 -geometry 1024x600 :1 &
+Xvnc -SecurityTypes none -listen tcp -ZlibLevel=0 -ImprovedHextile=0 -CompareFB=0 -geometry 1024x600 :1 > /dev/null & 
 EOM
 chmod 777 rootfs/bin/startvnc
 
@@ -48,8 +51,14 @@ then
 	apt update && apt install box86 tigervnc-standalone-server -y
 	touch /root/.FirstRunDone
 fi
+
+cat /etx/motd
 startvnc
 EOM
+
+# Self Explanatory
+printf "#!/bin/sh\nbox86 /opt/wine-devel/bin/wine $@" > /bin/wine
+printf "#!/bin/sh\nbox86 /opt/wine-devel/bin/wineserver $@" > /bin/wineserver
 
 touch rootfs/.installed # Wow best way to check if its installed
 
@@ -70,6 +79,7 @@ command+=" -b /sdcard"
 command+=" -b /storage"
 command+=" -b /mnt"
 command+=" -b $TMPDIR/:/tmp"
+command+=" -b /storage/9A03-171A/Android/data/com.termux/files/:/external"
 command+=" -w /root"
 command+=" /usr/bin/env -i"
 command+=" HOME=/root"
