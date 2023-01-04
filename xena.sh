@@ -1,5 +1,19 @@
+# vim: fileencoding=utf8:filetype=bash:nu:ts=2:shiftwidth=2:softtabstop=2:noexpandtab
 
-#set -e -u
+# set -e -u
+
+########
+# Checks
+if [ "$(id -u)" = "0" ]; then
+        echo "Cannot run this script as root! Refusing to work"
+        exit 1
+fi
+
+if [ ! -f "/system/build.prop" ]; then
+	echo "Script is only written to run in Android. Refusing to work."
+	exit 1
+fi
+
 
 #########
 # Global environments
@@ -8,30 +22,38 @@ ROOTFS_PATH="$HOME/.xena"
 #PROOT_BIN=""
 #########
 
-if [ ! -f "$ROOTFS_PATH/.installed" ]; #Im sure this is a bad way of doing this, there must be a better way implementing this.
-then
+if [ ! -f "$ROOTFS_PATH/.installed" ]; then
 	mkdir $ROOTFS_PATH
 
 	# Download proot-static and debian rootfs.                                  # TODO: Add --clean switch incase user encounters corrupted download.
 	if [ ! -f $TMPDIR/proot.tar.gz ];
 	then
-		curl -L https://github.com/ZhymabekRoman/proot-static/archive/refs/tags/1.0.tar.gz > $TMPDIR/proot.tar.gz
+		echo "Downloading proot..."
+		curl -L https://github.com/ZhymabekRoman/proot-static/archive/refs/tags/1.0.tar.gz -o $TMPDIR/proot.tar.gz >> /dev/null
+		echo "Done."
 	fi
 
 	if [ ! -f $TMPDIR/rootfs.tar.xz ];
 	then
-		curl -L https://github.com/termux/proot-distro/releases/download/v3.3.0/debian-arm-pd-v3.3.0.tar.xz > $TMPDIR/rootfs.tar.xz
+		echo "Downloading Debian Rootfs..."
+		curl -L https://github.com/termux/proot-distro/releases/download/v3.3.0/debian-arm-pd-v3.3.0.tar.xz -o $TMPDIR/rootfs.tar.xz >> /dev/null
+		echo "Done."
 fi
 	# Download static busybox
+	echo "Downloading busybox..."
 	mkdir $ROOTFS_PATH/bin
-	curl https://busybox.net/downloads/binaries/1.21.1/busybox-armv7l > $ROOTFS_PATH/bin/busybox
+	curl https://busybox.net/downloads/binaries/1.21.1/busybox-armv7l -o $ROOTFS_PATH/bin/busybox >> /dev/null
 	chmod 777 $ROOTFS_PATH/bin/busybox
+	echo "Done"
 
 	# Untar
+	echo "Extracting files..."
 	tar -xf $TMPDIR/proot.tar.gz 
 	# Using this method to avoid symlink errors.
 	proot-static-1.0/proot_static -0 -l -w / -r $ROOTFS_PATH -b $TMPDIR/:/tmp /bin/busybox tar -xf /tmp/rootfs.tar.xz
+
 	# DNS fix
+	echo "Adding resolv.conf"
 	echo "nameserver 8.8.8.8" > $ROOTFS_PATH/etc/resolv.conf
 	# TODO: Add MOTD, i have no idea what to write something friendly
 	echo "A" > $ROOTFS_PATH/etc/motd
@@ -54,9 +76,11 @@ fi
 		apt install wget gnupg2 tigervnc-standalone-server -y
 		wget https://itai-nelken.github.io/weekly-box86-debs/debian/box86.list -O /etc/apt/sources.list.d/box86.list
 		wget -qO- https://itai-nelken.github.io/weekly-box86-debs/debian/KEY
+		apt update
 		apt install box86
 		touch /root/.FirstRunDone
 	fi
+	apt update
 	apt install box86
 	cat /etc/motd
 	startvnc
