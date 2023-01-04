@@ -1,6 +1,6 @@
 # vim: fileencoding=utf8:filetype=bash:nu:ts=2:shiftwidth=2:softtabstop=2:noexpandtab
 
-# set -e -u
+set -e -u
 
 ########
 # Checks
@@ -14,13 +14,41 @@ if [ ! -f "/system/build.prop" ]; then
 	exit 1
 fi
 
-
 #########
 # Global environments
+HASH="?"
+XENA_VERSION="1.0"
 WINE_VERSION="7.1"
 ROOTFS_PATH="$HOME/.xena"
 #PROOT_BIN=""
 #########
+# Option Parsing
+while getopts ":hf:" opt; do
+  case $opt in
+    h)
+      # Display help message
+      echo "Xena a front-end wrapper for proot, box86 and wine
+			Usage: xena.sh [options] file.exe
+			"
+      exit 0
+      ;;
+    f)
+      file=$OPTARG
+      ;;
+		v)
+			echo "$(XENA_VERSION)+$(HASH)"
+			;;
+    \?)
+      # Invalid option
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
+    :)
+  esac
+done
+
+shift $((OPTIND - 1))
+
 
 if [ ! -f "$ROOTFS_PATH/.installed" ]; then
 	mkdir $ROOTFS_PATH
@@ -75,7 +103,7 @@ fi
 		apt upgrade -y
 		apt install wget gnupg2 tigervnc-standalone-server -y
 		wget https://itai-nelken.github.io/weekly-box86-debs/debian/box86.list -O /etc/apt/sources.list.d/box86.list
-		wget -qO- https://itai-nelken.github.io/weekly-box86-debs/debian/KEY
+		wget -qO- https://itai-nelken.github.io/weekly-box86-debs/debian/KEY.gpg | apt-key add -
 		apt update
 		apt install box86
 		touch /root/.FirstRunDone
