@@ -18,7 +18,7 @@ fi
 # took half of my brain cells to come up with a solution.
 function check_var {
   if [ ! -z "${!1}" ]; then
-		echo "Detected $1 altered values to ${!1}"
+		echo "Note: Detected $1 altered values to ${!1}. "
 	else
 		eval "$1=\$DEFAULT_$1"
   fi
@@ -37,25 +37,20 @@ XENA_VERSION="1.0"
 ########
 # Default variables
 DEFAULT_WINE_VERSION="7.1"
-DEFAULT_ROOTFS_PATH="~/.xena"
-DEFAULT_PROOT_PATH="~/.proot"
+DEFAULT_ROOTFS_PATH="$HOME/.xena"
+DEFAULT_PROOT_PATH="$HOME/.proot"
 #DEFAULT_WINE_PREFIX="~/wine"
 ########
 
+##########
 # User Modifiable Variables
 check_var "WINE_VERSION"
-
-exit 1 # For now
-
-if [[ ! "ROOTFS_PATH" ]]; then
-
-#ROOTFS_PATH="$HOME/.xena"
-#PROOT_BIN=""
-
+check_var "ROOTFS_PATH"
+check_var "PROOT_PATH"
 #########
 
 # Option Parsing
-while getopts ":hf:" opt; do
+while getopts ":vhf:" opt; do
   case $opt in
     h)
       # Display help message
@@ -68,7 +63,8 @@ while getopts ":hf:" opt; do
       file=$OPTARG
       ;;
 		v)
-			echo "$(XENA_VERSION)+$(HASH)"
+			echo "$XENA_VERSION+$HASH"
+			exit 0
 			;;
     \?)
       # Invalid option
@@ -84,6 +80,7 @@ shift $((OPTIND - 1))
 
 if [ ! -f "$ROOTFS_PATH/.installed" ]; then
 	mkdir $ROOTFS_PATH
+	mkdir $PROOT_PATH
 
 	# Download proot-static and debian rootfs.                                  # TODO: Add --clean switch incase user encounters corrupted download.
 	if [ ! -f $TMPDIR/proot.tar.gz ];
@@ -108,9 +105,9 @@ fi
 
 	# Untar
 	echo "Extracting files..."
-	tar -xf $TMPDIR/proot.tar.gz 
+	tar -xf $TMPDIR/proot.tar.gz --strip-components=1 -C $PROOT_PATH
 	# Using this method to avoid symlink errors.
-	proot-static-1.0/proot_static -0 -l -w / -r $ROOTFS_PATH -b $TMPDIR/:/tmp /bin/busybox tar -xf /tmp/rootfs.tar.xz
+	$PROOT_PATH/proot_static -0 -l -w / -r $ROOTFS_PATH -b $TMPDIR/:/tmp /bin/busybox tar -xf /tmp/rootfs.tar.xz
 
 	# DNS fix
 	echo "Adding resolv.conf"
@@ -156,7 +153,7 @@ fi
 # Its prooting time
 # TODO: Optional `--proot-command` flag or similar.
 proot_flags=(
-"./proot-static-1.0/proot_static"
+"$PROOT_PATH/proot_static"
 "--kill-on-exit"
 "--link2symlink"
 "-0"
