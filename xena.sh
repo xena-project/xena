@@ -1,7 +1,5 @@
 # vim: fileencoding=utf8:filetype=bash:nu:ts=2:shiftwidth=2:softtabstop=2:noexpandtab
 
-set -e -u
-
 ########
 # Checks
 if [ "$(id -u)" = "0" ]; then
@@ -14,14 +12,48 @@ if [ ! -f "/system/build.prop" ]; then
 	exit 1
 fi
 
-#########
-# Global environments
-HASH="?"
+########
+# Functions
+
+# took half of my brain cells to come up with a solution.
+function check_var {
+  if [ ! -z "${!1}" ]; then
+		echo "Detected $1 altered values to ${!1}"
+	else
+		eval "$1=\$DEFAULT_$1"
+  fi
+}
+
+#######
+
+
+# Constant Variables
+########
+HASH="?" # Somethingl like `1ea2922`? i dunno whats that will find out later.
 XENA_VERSION="1.0"
-WINE_VERSION="7.1"
-ROOTFS_PATH="$HOME/.xena"
-#PROOT_BIN=""
 #########
+#########
+
+########
+# Default variables
+DEFAULT_WINE_VERSION="7.1"
+DEFAULT_ROOTFS_PATH="~/.xena"
+DEFAULT_PROOT_PATH="~/.proot"
+#DEFAULT_WINE_PREFIX="~/wine"
+########
+
+# User Modifiable Variables
+check_var "WINE_VERSION"
+
+exit 1 # For now
+
+if [[ ! "ROOTFS_PATH" ]]; then
+
+#ROOTFS_PATH="$HOME/.xena"
+#PROOT_BIN=""
+
+#########
+
 # Option Parsing
 while getopts ":hf:" opt; do
   case $opt in
