@@ -50,7 +50,7 @@ check_var "PROOT_PATH"
 #########
 
 # Option Parsing
-while getopts "hfv" opt; do
+while getopts "hv" opt; do
   case $opt in
     h)
       echo "
@@ -137,6 +137,9 @@ fi
 		wget -qO- https://itai-nelken.github.io/weekly-box86-debs/debian/KEY.gpg | apt-key add -
 		apt update
 		apt install box86
+		wget https://twisteros.com/wine.tgz -O ~/wine.tgz
+		mkdir /opt/wine
+		busybox tar -xzvf ~/wine.tgz -C /opt/
 		touch /root/.FirstRunDone
 	fi
 	apt update
@@ -146,8 +149,10 @@ fi
 	EOM
 
 	# Self Explanatory
-	printf "#!/bin/sh\nbox86 /opt/wine-devel/bin/wine \$@" > $ROOTFS_PATH/bin/wine
-	printf "#!/bin/sh\nbox86 /opt/wine-devel/bin/wineserver \$@" > $ROOTFS_PATH/bin/wineserver
+	printf "#!/bin/sh\nbox86 /opt/wine/bin/wine \$@" > $ROOTFS_PATH/bin/wine
+	printf "#!/bin/sh\nbox86 /opt/wine/bin/wineserver \$@" > $ROOTFS_PATH/bin/wineserver
+	chmod 777 $ROOTFS_PATH/bin/wine
+	chmod 777 $ROOTFS_PATH/bin/winserver
 	touch $ROOTFS_PATH/.installed # Wow best way to check if its installed
 
 fi
