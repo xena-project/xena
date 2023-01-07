@@ -50,12 +50,14 @@ check_var "PROOT_PATH"
 #########
 
 # Option Parsing
-while getopts ":vhf:" opt; do
+while getopts "hfv" opt; do
   case $opt in
     h)
-      # Display help message
-      echo "Xena a front-end wrapper for proot, box86 and wine
-			Usage: xena.sh [options] file.exe
+      echo "
+Xena a front-end wrapper for proot, box86 and wine
+
+Usage: xena.sh [options] file.exe
+
 			"
       exit 0
       ;;
@@ -144,8 +146,8 @@ fi
 	EOM
 
 	# Self Explanatory
-	printf "#!/bin/sh\nbox86 /opt/wine-devel/bin/wine $@" > $ROOTFS_PATH/bin/wine
-	printf "#!/bin/sh\nbox86 /opt/wine-devel/bin/wineserver $@" > $ROOTFS_PATH/bin/wineserver
+	printf "#!/bin/sh\nbox86 /opt/wine-devel/bin/wine \$@" > $ROOTFS_PATH/bin/wine
+	printf "#!/bin/sh\nbox86 /opt/wine-devel/bin/wineserver \$@" > $ROOTFS_PATH/bin/wineserver
 	touch $ROOTFS_PATH/.installed # Wow best way to check if its installed
 
 fi
