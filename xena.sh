@@ -12,16 +12,33 @@ if [ ! -f "/system/build.prop" ]; then
 	exit 1
 fi
 
+if [ $# -eq 0 ]; then
+    echo "No option or file is present. Run xena.sh -h for options."
+		exit 1
+else
+	EXE_FILE=$1
+	COMMAND_EXEC=/bin/wine 
+fi
+
 ########
 # Functions
 
-# took half of my brain cells to come up with a solution.
 function check_var {
   if [ ! -z "${!1}" ]; then
 		echo "Note: Detected $1 altered values to ${!1}. "
 	else
 		eval "$1=\$DEFAULT_$1"
   fi
+}
+
+function _help {
+	echo "
+	 Xena a front-end wrapper for proot, box86 and wine.
+	 Usage: xena.sh [options]
+
+	 -s | Shell mode. useful
+	 "
+	exit 1
 }
 
 #######
@@ -49,20 +66,16 @@ check_var "ROOTFS_PATH"
 check_var "PROOT_PATH"
 #########
 
+
+
 # Option Parsing
-while getopts "hv" opt; do
+while getopts "hsv" opt; do
   case $opt in
     h)
-      echo "
-Xena a front-end wrapper for proot, box86 and wine
-
-Usage: xena.sh [options] file.exe
-
-			"
-      exit 0
+      _help
       ;;
-    f)
-      file=$OPTARG
+    s)
+      COMMAND_EXEC="--login"
       ;;
 		v)
 			echo "$XENA_VERSION+$HASH"
@@ -79,8 +92,12 @@ done
 
 shift $((OPTIND - 1))
 
+#
 
+# Installation
 if [ ! -f "$ROOTFS_PATH/.installed" ]; then
+	echo "Installing required stuff... Please don't panic if you cant understand anything."
+	sleep 3
 	mkdir $ROOTFS_PATH
 	mkdir $PROOT_PATH
 
@@ -142,9 +159,6 @@ fi
 		busybox tar -xzvf ~/wine.tgz -C /opt/
 		touch /root/.FirstRunDone
 	fi
-	apt update
-	apt install box86
-	cat /etc/motd
 	startvnc
 	EOM
 
@@ -152,7 +166,7 @@ fi
 	printf "#!/bin/sh\nbox86 /opt/wine/bin/wine \$@" > $ROOTFS_PATH/bin/wine
 	printf "#!/bin/sh\nbox86 /opt/wine/bin/wineserver \$@" > $ROOTFS_PATH/bin/wineserver
 	chmod 777 $ROOTFS_PATH/bin/wine
-	chmod 777 $ROOTFS_PATH/bin/winserver
+	chmod 777 $ROOTFS_PATH/bin/wineserver
 	touch $ROOTFS_PATH/.installed # Wow best way to check if its installed
 
 fi
@@ -182,8 +196,11 @@ proot_flags=(
 "PATH=/usr/local/sbin:/usr/local/bin:/bin:/usr/bin:/sbin:/usr/sbin:/usr/games:/usr/local/games"
 "TERM=xterm-256color"
 "LANG=C.UTF-8"
+"DISPLAY=:1"
+"PULSE_SERVER=127.0.0.1"
 "/bin/bash" 
 "--login"
+"$COMMAND_EXEC"
+"$EXE_FILE"
 )
-
 exec "${proot_flags[@]}"
